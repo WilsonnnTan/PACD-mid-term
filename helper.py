@@ -105,6 +105,15 @@ class GeometryAlgorithm:
         img_object_copy = copy.deepcopy(self.img_object)
         width, height = img_object_copy.size
         pixels = img_object_copy.load()
+        
+        for i in range(height):
+            for j in range(width):
+                if i - offset_y < 0 or j - offset_x < 0:
+                    pixels[j, i] = (0, 0, 0, 0)
+                else:
+                    pixels[j, i] = self.pixels[j - offset_x, i - offset_y]
+        
+        return img_object_copy
     
     def scaling(self, scale_x, scale_y):
         """
