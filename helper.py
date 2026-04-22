@@ -44,6 +44,7 @@ class GeometryAlgorithm:
             img_object (PIL.Image): The PIL Image object to convert.
         """
         self.img_object = img_object
+        self.pixels = self.img_object.load()
     
     def horizontal_reflection(self):
         """
@@ -57,6 +58,13 @@ class GeometryAlgorithm:
         """
         img_object_copy = copy.deepcopy(self.img_object)
         width, height = img_object_copy.size
+        pixels = img_object_copy.load()
+        
+        for i in range(height):
+            for j in range(width):
+                pixels[j, i] = self.pixels[width - j - 1, i]
+        
+        return img_object_copy
     
     def vertical_reflection(self):
         """
@@ -70,6 +78,14 @@ class GeometryAlgorithm:
         """
         img_object_copy = copy.deepcopy(self.img_object)
         width, height = img_object_copy.size
+        pixels = img_object_copy.load()
+        
+        for i in range(height):
+            for j in range(width):
+                pixels[j, i] = self.pixels[j, height - i - 1]
+
+        return img_object_copy
+                
     
     def translation(self, offset_x, offset_y):
         """
@@ -88,6 +104,7 @@ class GeometryAlgorithm:
         """
         img_object_copy = copy.deepcopy(self.img_object)
         width, height = img_object_copy.size
+        pixels = img_object_copy.load()
     
     def scaling(self, scale_x, scale_y):
         """
@@ -109,6 +126,7 @@ class GeometryAlgorithm:
         """
         img_object_copy = copy.deepcopy(self.img_object)
         width, height = img_object_copy.size
+        pixels = img_object_copy.load()
     
     def rotation(self, angle, expand=True):
         """
@@ -128,3 +146,4 @@ class GeometryAlgorithm:
         """
         img_object_copy = copy.deepcopy(self.img_object)
         width, height = img_object_copy.size
+        pixels = img_object_copy.load()
