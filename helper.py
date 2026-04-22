@@ -133,9 +133,30 @@ class GeometryAlgorithm:
         Raises:
             ValueError: If scale factors are not positive values.
         """
+        if scale_x <= 0 or scale_y <= 0:
+            raise ValueError("scale_x and scale_y must be positive values")
+        
         img_object_copy = copy.deepcopy(self.img_object)
         width, height = img_object_copy.size
         pixels = img_object_copy.load()
+        
+        scaled_width = int(width * scale_x)
+        scaled_height = int(height * scale_y)
+        
+        scaled_img = Image.new(img_object_copy.mode, (scaled_width, scaled_height))
+        scaled_pixels = scaled_img.load()
+        
+        for i in range(scaled_height):
+            for j in range(scaled_width):
+                original_pixel_i = min(int(i / scale_y), height - 1)
+                original_pixel_j = min(int(j / scale_x), width - 1)
+                
+                scaled_pixels[j, i] = pixels[original_pixel_j, original_pixel_i]
+        
+        # Crop the image back to original size
+        cropped_img = scaled_img.crop((0, 0, width, height))
+        
+        return cropped_img
     
     def rotation(self, angle, expand=True):
         """
@@ -156,3 +177,9 @@ class GeometryAlgorithm:
         img_object_copy = copy.deepcopy(self.img_object)
         width, height = img_object_copy.size
         pixels = img_object_copy.load()
+        
+        for i in range(height):
+            for j in range(width):
+                pass
+            
+        return img_object_copy
