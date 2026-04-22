@@ -68,10 +68,6 @@ def main():
                     angle = float(get_input("Rotation angle (degrees)", "45"))
                     expand = get_input("Expand canvas? (y/n)", "y").lower() == 'y'
                     processed_img = algorithm_manager.rotation(angle, expand=expand)
-                elif choice == '6':
-                    shear_x = float(get_input("Horizontal shear factor", "0.2"))
-                    shear_y = float(get_input("Vertical shear factor", "0.2"))
-                    processed_img = algorithm_manager.shearing(shear_x, shear_y)
                 else:
                     print("Invalid choice. Please try again.")
                     continue
