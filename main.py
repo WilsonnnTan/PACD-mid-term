@@ -38,7 +38,6 @@ def main():
             print("3. Translation (Shift)")
             print("4. Scaling (Resize)")
             print("5. Rotation")
-            print("6. Shearing (Skew)")
             print("7. Change Image Path")
             print("8. Exit")
             
