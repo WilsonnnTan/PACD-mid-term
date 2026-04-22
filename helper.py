@@ -174,12 +174,93 @@ class GeometryAlgorithm:
         Returns:
             img_object_copy (PIL.Image): A new rotated image object.
         """
+        import math
+        
         img_object_copy = copy.deepcopy(self.img_object)
         width, height = img_object_copy.size
         pixels = img_object_copy.load()
         
-        for i in range(height):
-            for j in range(width):
-                pass
+        # Convert angle to radians
+        angle_rad = math.radians(angle)
+        cos_angle = math.cos(angle_rad)
+        sin_angle = math.sin(angle_rad)
+        
+        # Calculate center
+        center_x = width / 2
+        center_y = height / 2
+        
+        if expand:
+            # Calculate new dimensions
+            corners = [
+                (0, 0), (width, 0), (0, height), (width, height)
+            ]
+            rotated_corners = []
+            for x, y in corners:
+                # Translate to center
+                tx = x - center_x
+                ty = y - center_y
+                # Rotate
+                rx = tx * cos_angle - ty * sin_angle
+                ry = tx * sin_angle + ty * cos_angle
+                rotated_corners.append((rx, ry))
             
-        return img_object_copy
+            # Find bounding box
+            xs = [c[0] for c in rotated_corners]
+            ys = [c[1] for c in rotated_corners]
+            new_width = int(max(xs) - min(xs))
+            new_height = int(max(ys) - min(ys))
+            
+            rotated_img = Image.new(img_object_copy.mode, (new_width, new_height))
+            rotated_pixels = rotated_img.load()
+            
+            # New center
+            new_center_x = new_width / 2
+            new_center_y = new_height / 2
+            
+            for i in range(new_height):
+                for j in range(new_width):
+                    # Translate to center
+                    tx = j - new_center_x
+                    ty = i - new_center_y
+                    
+                    # Inverse rotation
+                    orig_x = tx * cos_angle + ty * sin_angle + center_x
+                    orig_y = -tx * sin_angle + ty * cos_angle + center_y
+                    
+                    # Round to nearest pixel
+                    orig_x = int(round(orig_x))
+                    orig_y = int(round(orig_y))
+                    
+                    # Check bounds
+                    if 0 <= orig_x < width and 0 <= orig_y < height:
+                        rotated_pixels[j, i] = pixels[orig_x, orig_y]
+                    else:
+                        rotated_pixels[j, i] = (0, 0, 0, 0)
+            
+            return rotated_img
+        else:
+            # Keep original dimensions
+            rotated_img = Image.new(img_object_copy.mode, (width, height))
+            rotated_pixels = rotated_img.load()
+            
+            for i in range(height):
+                for j in range(width):
+                    # Translate to center
+                    tx = j - center_x
+                    ty = i - center_y
+                    
+                    # Inverse rotation
+                    orig_x = tx * cos_angle + ty * sin_angle + center_x
+                    orig_y = -tx * sin_angle + ty * cos_angle + center_y
+                    
+                    # Round to nearest pixel
+                    orig_x = int(round(orig_x))
+                    orig_y = int(round(orig_y))
+                    
+                    # Check bounds
+                    if 0 <= orig_x < width and 0 <= orig_y < height:
+                        rotated_pixels[j, i] = pixels[orig_x, orig_y]
+                    else:
+                        rotated_pixels[j, i] = (0, 0, 0, 0)
+            
+            return rotated_img
