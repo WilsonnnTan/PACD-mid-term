@@ -33,8 +33,8 @@ def main():
         
         while True:
             print("\nSelect a transformation:")
-            print("1. Horizontal Reflection (Flip Left-Right)")
-            print("2. Vertical Reflection (Flip Top-Bottom)")
+            print("1. Horizontal Reflection (Flip Top-Bottom)")
+            print("2. Vertical Reflection (Flip Left-Right)")
             print("3. Translation (Shift)")
             print("4. Scaling (Resize)")
             print("5. Rotation")

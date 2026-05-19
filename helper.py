@@ -45,13 +45,22 @@ class GeometryAlgorithm:
         """
         self.img_object = img_object
         self.pixels = self.img_object.load()
+
+    def _background_pixel(self):
+        """
+        Return a zero-valued background pixel compatible with the image mode.
+        """
+        bands = len(self.img_object.getbands())
+        if bands == 1:
+            return 0
+        return tuple(0 for _ in range(bands))
     
     def horizontal_reflection(self):
         """
-        Reflect the image horizontally (flip left to right).
+        Reflect the image horizontally (flip top to bottom).
         
         This method creates a mirror image of the original by flipping it
-        across the vertical axis (left becomes right and vice versa).
+        across the horizontal axis (top becomes bottom and vice versa).
         
         Returns:
             img_object_copy (PIL.Image): A new horizontally reflected image object.
@@ -62,16 +71,16 @@ class GeometryAlgorithm:
         
         for i in range(height):
             for j in range(width):
-                pixels[j, i] = self.pixels[width - j - 1, i]
+                pixels[j, i] = self.pixels[j, height - i - 1]
         
         return img_object_copy
     
     def vertical_reflection(self):
         """
-        Reflect the image vertically (flip top to bottom).
+        Reflect the image vertically (flip left to right).
         
         This method creates a mirror image of the original by flipping it
-        across the horizontal axis (top becomes bottom and vice versa).
+        across the vertical axis (left becomes right and vice versa).
         
         Returns:
             img_object_copy (PIL.Image): A new vertically reflected image object.
@@ -82,7 +91,7 @@ class GeometryAlgorithm:
         
         for i in range(height):
             for j in range(width):
-                pixels[j, i] = self.pixels[j, height - i - 1]
+                pixels[j, i] = self.pixels[width - j - 1, i]
 
         return img_object_copy
                 
@@ -105,13 +114,17 @@ class GeometryAlgorithm:
         img_object_copy = copy.deepcopy(self.img_object)
         width, height = img_object_copy.size
         pixels = img_object_copy.load()
+        background = self._background_pixel()
         
         for i in range(height):
             for j in range(width):
-                if i - offset_y < 0 or j - offset_x < 0:
-                    pixels[j, i] = (0, 0, 0, 0)
+                source_x = j - offset_x
+                source_y = i - offset_y
+
+                if 0 <= source_x < width and 0 <= source_y < height:
+                    pixels[j, i] = self.pixels[source_x, source_y]
                 else:
-                    pixels[j, i] = self.pixels[j - offset_x, i - offset_y]
+                    pixels[j, i] = background
         
         return img_object_copy
     
@@ -136,14 +149,12 @@ class GeometryAlgorithm:
         if scale_x <= 0 or scale_y <= 0:
             raise ValueError("scale_x and scale_y must be positive values")
         
-        img_object_copy = copy.deepcopy(self.img_object)
-        width, height = img_object_copy.size
-        pixels = img_object_copy.load()
+        width, height = self.img_object.size
         
         scaled_width = int(width * scale_x)
         scaled_height = int(height * scale_y)
         
-        scaled_img = Image.new(img_object_copy.mode, (scaled_width, scaled_height))
+        scaled_img = Image.new(self.img_object.mode, (scaled_width, scaled_height))
         scaled_pixels = scaled_img.load()
         
         for i in range(scaled_height):
@@ -151,11 +162,11 @@ class GeometryAlgorithm:
                 original_pixel_i = min(int(i / scale_y), height - 1)
                 original_pixel_j = min(int(j / scale_x), width - 1)
                 
-                scaled_pixels[j, i] = pixels[original_pixel_j, original_pixel_i]
-        
-        # Crop the image back to original size
+                scaled_pixels[j, i] = self.pixels[original_pixel_j, original_pixel_i]
+
+        # Keep the original canvas size by cropping the scaled result.
         cropped_img = scaled_img.crop((0, 0, width, height))
-        
+
         return cropped_img
     
     def rotation(self, angle, expand=True):
@@ -179,6 +190,7 @@ class GeometryAlgorithm:
         img_object_copy = copy.deepcopy(self.img_object)
         width, height = img_object_copy.size
         pixels = img_object_copy.load()
+        background = self._background_pixel()
         
         # Convert angle to radians
         angle_rad = math.radians(angle)
@@ -186,13 +198,13 @@ class GeometryAlgorithm:
         sin_angle = math.sin(angle_rad)
         
         # Calculate center
-        center_x = width / 2
-        center_y = height / 2
+        center_x = (width - 1) / 2
+        center_y = (height - 1) / 2
         
         if expand:
             # Calculate new dimensions
             corners = [
-                (0, 0), (width, 0), (0, height), (width, height)
+                (0, 0), (width - 1, 0), (0, height - 1), (width - 1, height - 1)
             ]
             rotated_corners = []
             for x, y in corners:
@@ -207,8 +219,8 @@ class GeometryAlgorithm:
             # Find bounding box
             xs = [c[0] for c in rotated_corners]
             ys = [c[1] for c in rotated_corners]
-            new_width = int(max(xs) - min(xs))
-            new_height = int(max(ys) - min(ys))
+            new_width = math.ceil(max(xs) - min(xs)) + 1
+            new_height = math.ceil(max(ys) - min(ys)) + 1
             
             rotated_img = Image.new(img_object_copy.mode, (new_width, new_height))
             rotated_pixels = rotated_img.load()
@@ -235,7 +247,7 @@ class GeometryAlgorithm:
                     if 0 <= orig_x < width and 0 <= orig_y < height:
                         rotated_pixels[j, i] = pixels[orig_x, orig_y]
                     else:
-                        rotated_pixels[j, i] = (0, 0, 0, 0)
+                        rotated_pixels[j, i] = background
             
             return rotated_img
         else:
@@ -261,6 +273,6 @@ class GeometryAlgorithm:
                     if 0 <= orig_x < width and 0 <= orig_y < height:
                         rotated_pixels[j, i] = pixels[orig_x, orig_y]
                     else:
-                        rotated_pixels[j, i] = (0, 0, 0, 0)
+                        rotated_pixels[j, i] = background
             
             return rotated_img
